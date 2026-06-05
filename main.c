@@ -235,8 +235,18 @@ char* token_type_name(TokenType t) {
         case TOK_ARROW: return "ARROW";
         case TOK_LBRACE: return "LBRACE";
         case TOK_RBRACE: return "RBRACE";
+        case TOK_LBRACKET: return "LBRACKET";
+        case TOK_RBRACKET: return "RBRACKET";
+        case TOK_COMMA: return "COMMA";
         case TOK_DOT: return "DOT";
         case TOK_LOAD: return "LOAD";
+        case TOK_STORE: return "STORE";
+        case TOK_ADD: return "ADD";
+        case TOK_SUB: return "SUB";
+        case TOK_MUL: return "MUL";
+        case TOK_DIV: return "DIV";
+        case TOK_MOD: return "MOD";
+        case TOK_REGISTER: return "REGISTER";
         case TOK_RETURN: return "RETURN";
         case TOK_NEWLINE: return "NEWLINE";
         default: return "UNKNOWN";
@@ -275,8 +285,8 @@ void tokenize(const char* src) {
             continue;
         }
 
-        /* Register ($0, $1, etc) */
-        if (src[pos] == '$' && isdigit(src[pos + 1])) {
+        /* Register ($0, $1, etc) - MUST come before other checks */
+        if (src[pos] == '$') {
             tok.type = TOK_REGISTER;
             int i = 0;
             tok.value[i++] = src[pos++];
@@ -297,7 +307,7 @@ void tokenize(const char* src) {
         }
 
         /* Identifiers and keywords */
-        if (is_identifier_start(src[pos]) || src[pos] == '_') {
+        if (is_identifier_start(src[pos])) {
             char ident[256];
             read_identifier(src, &pos, ident);
             tok.type = keyword_to_token(ident);
@@ -309,6 +319,9 @@ void tokenize(const char* src) {
         /* Two-character operators */
         if (src[pos] == '-' && src[pos + 1] == '>') {
             tok.type = TOK_ARROW;
+            tok.value[0] = '-';
+            tok.value[1] = '>';
+            tok.value[2] = '\0';
             pos += 2;
             tokens.tokens[tokens.count++] = tok;
             continue;
@@ -316,6 +329,9 @@ void tokenize(const char* src) {
 
         if (src[pos] == '=' && src[pos + 1] == '=') {
             tok.type = TOK_EQ;
+            tok.value[0] = '=';
+            tok.value[1] = '=';
+            tok.value[2] = '\0';
             pos += 2;
             tokens.tokens[tokens.count++] = tok;
             continue;
@@ -323,6 +339,9 @@ void tokenize(const char* src) {
 
         if (src[pos] == '!' && src[pos + 1] == '=') {
             tok.type = TOK_NEQ;
+            tok.value[0] = '!';
+            tok.value[1] = '=';
+            tok.value[2] = '\0';
             pos += 2;
             tokens.tokens[tokens.count++] = tok;
             continue;
@@ -330,6 +349,9 @@ void tokenize(const char* src) {
 
         if (src[pos] == '<' && src[pos + 1] == '=') {
             tok.type = TOK_LTE;
+            tok.value[0] = '<';
+            tok.value[1] = '=';
+            tok.value[2] = '\0';
             pos += 2;
             tokens.tokens[tokens.count++] = tok;
             continue;
@@ -337,6 +359,9 @@ void tokenize(const char* src) {
 
         if (src[pos] == '>' && src[pos + 1] == '=') {
             tok.type = TOK_GTE;
+            tok.value[0] = '>';
+            tok.value[1] = '=';
+            tok.value[2] = '\0';
             pos += 2;
             tokens.tokens[tokens.count++] = tok;
             continue;
