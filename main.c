@@ -396,7 +396,7 @@ void tokenize(const char* src) {
             case ';': tok.type = TOK_SEMILON; break;
             case '#': tok.type = TOK_HASH; break;
             default:
-                fprintf(stderr, "Unknown character: %c\n", src[pos]);
+                fprintf(stderr, "Unknown character: %c (line %d)\n", src[pos], line);
                 pos++;
                 continue;
         }
