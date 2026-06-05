@@ -360,9 +360,10 @@ void tokenize(const char* src) {
         tokens.tokens[tokens.count++] = tok;
     }
 
-    tok.type = TOK_EOF;
-    tok.value[0] = '\0';
-    tokens.tokens[tokens.count++] = tok;
+    Token tok_eof;
+    tok_eof.type = TOK_EOF;
+    tok_eof.value[0] = '\0';
+    tokens.tokens[tokens.count++] = tok_eof;
     tokens.pos = 0;
 }
 
@@ -370,16 +371,17 @@ void tokenize(const char* src) {
    PARSER HELPERS
    ============================================================ */
 
-Token current_token() {
+Token current_token(void) {
     if (tokens.pos < tokens.count) {
         return tokens.tokens[tokens.pos];
     }
     Token t;
     t.type = TOK_EOF;
+    t.value[0] = '\0';
     return t;
 }
 
-void advance() {
+void advance(void) {
     if (tokens.pos < tokens.count) {
         tokens.pos++;
     }
@@ -432,7 +434,7 @@ char* get_reg_name(const char* virt_reg) {
     return fallback;
 }
 
-int get_label() {
+int get_label(void) {
     return label_counter++;
 }
 
@@ -440,7 +442,7 @@ int get_label() {
    MAIN COMPILATION LOGIC
    ============================================================ */
 
-void compile_instruction() {
+void compile_instruction(void) {
     Token tok = current_token();
 
     switch (tok.type) {
@@ -538,7 +540,7 @@ void compile_instruction() {
     }
 }
 
-void parse_function() {
+void parse_function(void) {
     /* fx.functionname or function.functionname */
     int is_fx = match(TOK_FX);
     if (!is_fx) {
