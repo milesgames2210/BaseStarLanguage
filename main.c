@@ -135,6 +135,7 @@ int function_count = 0;
 CodeBuffer code_buffer;
 int label_counter = 0;
 int total_allocated = 0;  /* For %A calculations */
+int debug_mode = 0;
 
 /* ============================================================
    LEXER
@@ -145,7 +146,7 @@ int is_identifier_start(char c) {
 }
 
 int is_identifier_char(char c) {
-    return isalnum(c) || c == '_' || c == '-';
+    return isalnum(c) || c == '_';
 }
 
 void skip_whitespace(const char* src, int* pos) {
@@ -221,6 +222,25 @@ TokenType keyword_to_token(const char* keyword) {
     if (strcmp(keyword, "MemExit") == 0) return TOK_MEMEXIT;
     if (strcmp(keyword, "p") == 0) return TOK_P;
     return TOK_IDENT;
+}
+
+char* token_type_name(TokenType t) {
+    switch (t) {
+        case TOK_EOF: return "EOF";
+        case TOK_NUMBER: return "NUMBER";
+        case TOK_STRING: return "STRING";
+        case TOK_IDENT: return "IDENT";
+        case TOK_FX: return "FX";
+        case TOK_FUNCTION: return "FUNCTION";
+        case TOK_ARROW: return "ARROW";
+        case TOK_LBRACE: return "LBRACE";
+        case TOK_RBRACE: return "RBRACE";
+        case TOK_DOT: return "DOT";
+        case TOK_LOAD: return "LOAD";
+        case TOK_RETURN: return "RETURN";
+        case TOK_NEWLINE: return "NEWLINE";
+        default: return "UNKNOWN";
+    }
 }
 
 void tokenize(const char* src) {
@@ -365,6 +385,14 @@ void tokenize(const char* src) {
     tok_eof.value[0] = '\0';
     tokens.tokens[tokens.count++] = tok_eof;
     tokens.pos = 0;
+
+    if (debug_mode) {
+        fprintf(stderr, "=== TOKENS ===\n");
+        for (int i = 0; i < tokens.count; i++) {
+            fprintf(stderr, "[%d] %s: '%s'\n", i, token_type_name(tokens.tokens[i].type), tokens.tokens[i].value);
+        }
+        fprintf(stderr, "==============\n");
+    }
 }
 
 /* ============================================================
@@ -397,7 +425,8 @@ int match(TokenType type) {
 
 int expect(TokenType type, const char* msg) {
     if (current_token().type != type) {
-        fprintf(stderr, "ERROR: Expected %s but got %d\n", msg, current_token().type);
+        fprintf(stderr, "ERROR: Expected %s but got %s (token value: '%s')\n", 
+                msg, token_type_name(current_token().type), current_token().value);
         return 0;
     }
     advance();
@@ -534,7 +563,9 @@ void compile_instruction(void) {
         }
 
         default:
-            fprintf(stderr, "Unknown instruction: %d\n", tok.type);
+            if (tok.type != TOK_NEWLINE && tok.type != TOK_EOF) {
+                fprintf(stderr, "Unknown instruction: %s\n", token_type_name(tok.type));
+            }
             advance();
             break;
     }
@@ -611,6 +642,11 @@ int main(int argc, char* argv[]) {
     if (argc < 2) {
         fprintf(stderr, "Usage: %s <star_file>\n", argv[0]);
         return 1;
+    }
+
+    /* Check for debug flag */
+    if (argc > 2 && strcmp(argv[2], "-d") == 0) {
+        debug_mode = 1;
     }
 
     FILE* f = fopen(argv[1], "r");
